@@ -46,7 +46,6 @@ optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999))
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 print(model)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
 model.to(device)
 criterion = torch.nn.NLLLoss().to(device)
 
@@ -57,16 +56,17 @@ for epoch in range(epochs):
     train_loss = 0.0
     train_accuracy =0.0
     model.train()
-    scheduler.step()
-    for i,batch in enumerate(train_dataloader):
+    
+    for i,(pts,labels) in enumerate(train_dataloader):
         batch_correct = 0
         pts_num = 0
-        pts,labels = batch
-        #pts tensor [16,2500,3]
+        
+        labels = labels.to(device)
         pts =  pts.transpose(2,1)   
-        pts.to(device)
-        labels.to(device)
+        pts= pts.to(device)
+
         optimizer.zero_grad()
+        
         output,_,trans_feat = model(pts)
         # output(size,num_classes) labels(size)
         output = output.view(-1,num_classes)
@@ -84,6 +84,6 @@ for epoch in range(epochs):
         optimizer.step()
         
         print(f'cur batch is {i} total about 122')
-        
+    scheduler.step()    
     print(f'cur epoch {epoch},average train loss {train_loss/num_batch},accuracy rate {train_accuracy/num_batch}')
     
